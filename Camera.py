@@ -1,29 +1,7 @@
-# This file is part of PyAugen
-#
-# Copyright (c) 2020 -- Élie Michel <elie.michel@exppad.com>
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to
-# deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-# sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# The Software is provided "as is", without warranty of any kind, express or
-# implied, including but not limited to the warranties of merchantability,
-# fitness for a particular purpose and non-infringement. In no event shall the
-# authors or copyright holders be liable for any claim, damages or other
-# liability, whether in an action of contract, tort or otherwise, arising
-# from, out of or in connection with the software or the use or other dealings
-# in the Software.
-
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from .utils import perspective
+from utils import perspective
 
 class Camera:
     def __init__(self, width, height):
@@ -37,6 +15,8 @@ class Camera:
         self.angular_velocity = None
         self.rot_around_vertical = 0
         self.rot_around_horizontal = 0
+        self.width = width
+        self.height = height
         self.resize(width, height)
 
     def resize(self, width, height):
@@ -91,3 +71,39 @@ class Camera:
             self.angular_velocity = None
         else:
             self._rotate(dx * self.momentum, dy * self.momentum)
+
+    def screen_to_world_ray(self, x, y):
+        # Convert screen coordinates to normalized device coordinates (NDC)
+        x = 2.0 * x / self.width - 1.0
+        y = 1.0 - 2.0 * y / self.height
+
+        # Clip coordinates
+        clip_coords = np.array([x, y, -1.0, 1.0], dtype=np.float32)
+        # Compute the inverse of the projection matrix
+        inv_proj_matrix = np.linalg.inv(self.perspectiveMatrix)
+
+        # Transform clip coordinates to view space
+        view_space_pos = inv_proj_matrix @ clip_coords
+        view_space_pos[2] = -1.0  # Set to -1 for a forward-facing ray
+        view_space_pos[3] = 0.0   # Set to 0 for a direction vector
+
+        # Compute the inverse of the view matrix
+        inv_view_matrix = np.linalg.inv(self.viewMatrix)
+        eye_position = inv_view_matrix[:3, 3]
+
+        # Transform view space coordinates to world space
+        world_space_pos = inv_view_matrix @ view_space_pos
+
+        # Normalize the direction
+        ray_direction = world_space_pos[:3]
+        ray_direction /= np.linalg.norm(ray_direction)
+
+        return eye_position,ray_direction
+
+    def world_to_screen(self, world_pos):
+        view_pos = self.viewMatrix @ np.array([*world_pos, 1])
+        clip_pos = self.perspectiveMatrix @ view_pos
+        clip_pos /= clip_pos[3]
+        x = (clip_pos[0] + 1) / 2 * self.width
+        y = (1 - clip_pos[1]) / 2 * self.height
+        return x, y

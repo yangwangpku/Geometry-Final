@@ -26,9 +26,11 @@
 
 in vec3 in_vert;
 in vec3 in_normal;
+in vec4 in_color;
 
 out vec3 v_normal;
 out vec3 v_position;
+out vec4 v_color;
 
 uniform mat4 uPerspectiveMatrix;
 uniform mat4 uViewMatrix;
@@ -36,5 +38,6 @@ uniform mat4 uViewMatrix;
 void main() {
     v_normal = in_normal;
     v_position = in_vert;
+    v_color = in_color;
     gl_Position = uPerspectiveMatrix * uViewMatrix * vec4(v_position, 1.0);
 }

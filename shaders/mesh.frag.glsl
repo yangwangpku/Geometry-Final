@@ -26,10 +26,12 @@
 
 in vec3 v_normal;
 in vec3 v_position;
+in vec4 v_color;
 
 out vec4 f_color;
 
-uniform vec4 uColor = vec4(1.0, 0.5, 0.1, 1.0);
+// uniform vec4 uColor = vec4(1.0, 0.5, 0.1, 1.0);
+// uniform vec4 uColor = vec4(102/255.0, 102/255.0, 102/255.0, 102/255.0);
 uniform mat4 uViewMatrix;
 uniform float uHardness = 16.0;
 
@@ -45,14 +47,14 @@ void main() {
     // This is a very basic lighting, for visualization only //
 
     vec3 n = normalize(v_normal);
-    vec3 c = uColor.rgb * ambient;
+    vec3 c = v_color.rgb * ambient;
     vec3 v = normalize(viewpos - v_position);
     vec3 l, r;
     float s, spec;
 
     l = normalize(lightpos0 - v_position);
     s = max(0.0, dot(n, l));
-    c += uColor.rgb * s * lightcolor0;
+    c += v_color.rgb * s * lightcolor0;
     if (s > 0) {
         r = reflect(-l, n);
         spec = pow(max(0.0, dot(v, r)), uHardness);
@@ -61,12 +63,12 @@ void main() {
 
     l = normalize(lightpos1 - v_position);
     s = max(0.0, dot(n, l));
-    c += uColor.rgb * s * lightcolor1;
+    c += v_color.rgb * s * lightcolor1;
     if (s > 0) {
         r = reflect(-l, n);
         spec = pow(max(0.0, dot(v, r)), uHardness);
         c += spec * lightcolor1;
     }
 
-    f_color = vec4(c * 0.5, uColor.a);
+    f_color = vec4(c * 0.5, v_color.a);
 }
