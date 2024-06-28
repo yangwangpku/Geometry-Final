@@ -32,6 +32,9 @@ class App:
     def main_loop(self):
         previous_time = glfw.get_time()
 
+        w, h = self.size()
+        glfw.set_window_size_limits(self.window, w, h, w, h)
+
         # Loop until the user closes the window
         while not glfw.window_should_close(self.window):
             glfw.poll_events()

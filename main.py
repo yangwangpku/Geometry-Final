@@ -14,7 +14,7 @@ class MyApp(App):
     def init(self):
         ctx = self.ctx
         # Load a mesh
-        self.mesh = ObjMesh("sample-data/dragon.obj")
+        self.mesh = ObjMesh("sample-data/simplification.obj")
 
         # Load the glsl program
         self.program = ctx.program(
